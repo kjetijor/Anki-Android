@@ -31,6 +31,25 @@ import kotlin.time.Duration.Companion.milliseconds
 @RunWith(AndroidJUnit4::class)
 class AndroidTtsPlayerTest {
     @Test
+    fun `don't return voices that's not installed'`() {
+        var notInstalledVoice =
+            AndroidTtsVoice(
+                fakeVoice("voice-x", Locale.forLanguageTag("en-US"), setOf(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED)),
+                ENGINE_A,
+            )
+        var voice = AndroidTtsVoice(fakeVoice("voice-x", Locale.forLanguageTag("en-US")), ENGINE_A)
+        val ttsVoices =
+            listOf(
+                notInstalledVoice,
+                voice,
+            )
+        val player = AndroidTtsPlayer(listOf(notInstalledVoice, voice))
+        val voices = player.getAvailableVoices()
+        assertThat(voices, hasItem(voice))
+        assertThat(voices, not(hasItem(notInstalledVoice)))
+    }
+
+    @Test
     fun `playback is routed to the engine which owns the voice`() {
         val test = playerTest()
 
@@ -162,11 +181,12 @@ class AndroidTtsPlayerTest {
     private fun fakeVoice(
         voiceName: String,
         voiceLocale: Locale,
+        voiceFeatures: Set<String> = emptySet(),
     ): Voice =
         mockk(relaxed = true) {
             every { name } returns voiceName
             every { locale } returns voiceLocale
-            every { features } returns emptySet()
+            every { features } returns voiceFeatures
         }
 
     companion object {
