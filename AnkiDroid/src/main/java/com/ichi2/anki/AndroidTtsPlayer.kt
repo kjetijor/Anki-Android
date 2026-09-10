@@ -93,7 +93,7 @@ class AndroidTtsPlayer(
         TtsVoices.ttsEngine?.let { defaultEngine -> getOrCreateTts(defaultEngine) }
     }
 
-    override fun getAvailableVoices(): List<TtsVoice> = this.voices
+    override fun getAvailableVoices(): List<TtsVoice> = this.voices.filter { !it.unavailable() }
 
     /**
      * Returns a ready [TextToSpeech] bound to [engine], creating and caching one if necessary.
